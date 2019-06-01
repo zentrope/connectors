@@ -15,8 +15,8 @@ class BackgroundView: NSView {
     var box: CGRect = .zero
 
     init() {
-        super.init(frame: NSMakeRect(0, 0, 600, 600))
-
+        super.init(frame: NSMakeRect(0, 0, 400, 400))
+        setValue(true, forKey: "flipped")
         addSubview(reset)
         reset.title = "Reset"
         reset.bezelStyle = .texturedSquare
@@ -25,7 +25,7 @@ class BackgroundView: NSView {
         reset.target = self
         NSLayoutConstraint.activate([
             reset.topAnchor.constraint(equalTo: topAnchor, constant: 10),
-            reset.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10)
+            reset.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10)
         ])
         wantsLayer = true
 
@@ -37,19 +37,22 @@ class BackgroundView: NSView {
     }
 
     @objc func resetClicked(_ sender: NSButton) {
-        // Do this because not accounting for scrolling off screen on window size change
-        box = CGRect(x: 20, y: bounds.maxY - 20 - 66, width: 100, height: 66)
+        box = CGRect(x: 60, y: 60, width: 100, height: 66)
+        render(box)
+        setFrameSize(NSMakeSize(400, 400))
         needsDisplay = true
     }
 
     private func drawGrid() {
         layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        let gridSize = 20
+
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         context.setStrokeColor(NSColor.gray.cgColor)
         context.setLineWidth(0.2)
 
         for row in Int(bounds.minY)...Int(bounds.maxY) {
-            if row % 20 == 0 {
+            if row % gridSize == 0 {
                 context.beginPath()
                 context.move(to: CGPoint(x: bounds.minX, y: CGFloat(row)))
                 context.addLine(to: CGPoint(x: bounds.maxX, y: CGFloat(row)))
@@ -58,13 +61,17 @@ class BackgroundView: NSView {
         }
 
         for col in Int(bounds.minX)...Int(bounds.maxX) {
-            if col % 20 == 0 {
+            if col % gridSize == 0 {
                 context.beginPath()
                 context.move(to: CGPoint(x: CGFloat(col), y: bounds.minY))
                 context.addLine(to: CGPoint(x: CGFloat(col), y: bounds.maxY))
                 context.strokePath()
             }
         }
+
+        context.beginPath()
+        context.addRect(bounds)
+        context.strokePath()
 
         needsDisplay = true
     }
@@ -106,19 +113,38 @@ class BackgroundView: NSView {
         if !dragging { return }
         let place = convert(event.locationInWindow, from: nil)
         box = CGRect(x: place.x - offsetX, y: place.y - offsetY, width: box.width, height: box.height)
+
+        resizeFrame(box: box)
         render(box)
+
         needsDisplay = true
+    }
+
+    func resizeFrame(box: CGRect) {
+        let height = box.maxY < 410 ? bounds.height : box.maxY + 10
+        let width = box.maxX < 410 ? 400 : box.maxX + 10
+        setFrameSize(NSMakeSize(width, height))
     }
 }
 
 class ViewController: NSViewController {
 
+    var scrollView = NSScrollView(frame: NSMakeRect(0, 0, 300, 300))
+
     override func loadView() {
-        self.view = BackgroundView()
+        let bg = BackgroundView()
+        scrollView.documentView = bg
+        scrollView.contentView.setValue(true, forKey: "flipped")
+        scrollView.hasHorizontalScroller = true
+        scrollView.hasVerticalScroller = true
+        self.view = scrollView
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        let pt = NSMakePoint(0.0, (scrollView.documentView?.bounds.size.height)!)
+
+        scrollView.documentView?.scroll(pt)
     }
 
 }
