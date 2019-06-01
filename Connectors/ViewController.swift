@@ -16,7 +16,6 @@ class BackgroundView: NSView {
 
     init() {
         super.init(frame: NSMakeRect(0, 0, 400, 400))
-        setValue(true, forKey: "flipped")
         addSubview(reset)
         reset.title = "Reset"
         reset.bezelStyle = .texturedSquare
@@ -29,57 +28,56 @@ class BackgroundView: NSView {
         ])
         wantsLayer = true
 
-        resetClicked(reset)
+        resetView()
     }
 
     required init?(coder decoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    @objc func resetClicked(_ sender: NSButton) {
+    private func resetView() {
         box = CGRect(x: 60, y: 60, width: 100, height: 66)
         render(box)
         setFrameSize(NSMakeSize(400, 400))
         needsDisplay = true
     }
 
+    @objc func resetClicked(_ sender: NSButton) {
+        resetView()
+    }
+
+    override var isFlipped: Bool { return true }
+
     private func drawGrid() {
-        layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
         let gridSize = 20
 
         guard let context = NSGraphicsContext.current?.cgContext else { return }
-        context.setStrokeColor(NSColor.gray.cgColor)
+
+        context.setStrokeColor(NSColor.controlAccentColor.cgColor)
         context.setLineWidth(0.2)
+
+        context.beginPath()
+        context.addRect(bounds)
 
         for row in Int(bounds.minY)...Int(bounds.maxY) {
             if row % gridSize == 0 {
-                context.beginPath()
-                context.move(to: CGPoint(x: bounds.minX, y: CGFloat(row)))
-                context.addLine(to: CGPoint(x: bounds.maxX, y: CGFloat(row)))
-                context.strokePath()
+                context.addLines(between: [CGPoint(x: bounds.minX, y: CGFloat(row)), CGPoint(x: bounds.maxX, y: CGFloat(row))])
             }
         }
 
         for col in Int(bounds.minX)...Int(bounds.maxX) {
             if col % gridSize == 0 {
-                context.beginPath()
-                context.move(to: CGPoint(x: CGFloat(col), y: bounds.minY))
-                context.addLine(to: CGPoint(x: CGFloat(col), y: bounds.maxY))
-                context.strokePath()
+                context.addLines(between: [CGPoint(x: CGFloat(col), y: bounds.minY), CGPoint(x: CGFloat(col), y: bounds.maxY)])
             }
         }
-
-        context.beginPath()
-        context.addRect(bounds)
         context.strokePath()
-
-        needsDisplay = true
     }
 
     private func render(_ box: CGRect) {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
-        context.setFillColor(NSColor.white.cgColor)
+        context.setFillColor(NSColor.controlBackgroundColor.cgColor)
         context.setStrokeColor(NSColor.orange.cgColor)
+
         let p = NSBezierPath(roundedRect: box, xRadius: 10, yRadius: 10)
         p.lineWidth = 2
         p.fill()
@@ -116,7 +114,6 @@ class BackgroundView: NSView {
 
         resizeFrame(box: box)
         render(box)
-
         needsDisplay = true
     }
 
@@ -142,10 +139,8 @@ class ViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        let pt = NSMakePoint(0.0, (scrollView.documentView?.bounds.size.height)!)
-
-        scrollView.documentView?.scroll(pt)
+//        let pt = NSMakePoint(0.0, (scrollView.documentView?.bounds.size.height)!)
+//
+//        scrollView.documentView?.scroll(pt)
     }
-
 }
-
