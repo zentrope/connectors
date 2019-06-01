@@ -10,8 +10,8 @@ import Cocoa
 
 class NCGridView: NSView {
 
-    private let defaultWidth = CGFloat(400)
-    private let defaultHeight = CGFloat(400)
+    private let defaultWidth = CGFloat(500)
+    private let defaultHeight = CGFloat(500)
     private let defaultMargin = CGFloat(10)
 
     private var box: CGRect = .zero
@@ -128,10 +128,12 @@ class NCControlBar: NSView {
 
         addSubview(resetButton)
         resetButton.translatesAutoresizingMaskIntoConstraints = false
-        resetButton.title = "Reset"
         resetButton.bezelStyle = .roundRect
+        resetButton.isBordered = false        
+        resetButton.image = NSImage(named: NSImage.refreshTemplateName)
         resetButton.action = #selector(resetButtonClicked(_:))
         resetButton.target = self
+        resetButton.toolTip = "Reset everything and start over"
         resetButton.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             resetButton.topAnchor.constraint(equalTo: topAnchor, constant: 10),
@@ -158,7 +160,7 @@ class NCControlBar: NSView {
 
 class ViewController: NSViewController {
 
-    var scrollView = NSScrollView(frame: NSMakeRect(0, 0, 300, 300))
+    var scrollView = NSScrollView(frame: .zero)
     var backgroundView = NCGridView()
     var controlBar = NCControlBar()
 
@@ -177,6 +179,8 @@ class ViewController: NSViewController {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
+            view.widthAnchor.constraint(greaterThanOrEqualToConstant: 500),
+            view.heightAnchor.constraint(greaterThanOrEqualToConstant: 500),
             controlBar.topAnchor.constraint(equalTo: view.topAnchor),
             controlBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             controlBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
