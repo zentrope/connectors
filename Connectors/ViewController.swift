@@ -8,42 +8,29 @@
 
 import Cocoa
 
-class BackgroundView: NSView {
+class NCGridView: NSView {
 
-    private var reset = NSButton()
+    private let defaultWidth = CGFloat(400)
+    private let defaultHeight = CGFloat(400)
+    private let defaultMargin = CGFloat(10)
 
-    var box: CGRect = .zero
+    private var box: CGRect = .zero
 
     init() {
-        super.init(frame: NSMakeRect(0, 0, 400, 400))
-        addSubview(reset)
-        reset.title = "Reset"
-        reset.bezelStyle = .texturedSquare
-        reset.translatesAutoresizingMaskIntoConstraints = false
-        reset.action = #selector(resetClicked(_:))
-        reset.target = self
-        NSLayoutConstraint.activate([
-            reset.topAnchor.constraint(equalTo: topAnchor, constant: 10),
-            reset.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10)
-        ])
+        super.init(frame: NSMakeRect(0, 0, defaultWidth, defaultHeight))
         wantsLayer = true
-
-        resetView()
+        reset()
     }
 
     required init?(coder decoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func resetView() {
-        box = CGRect(x: 60, y: 60, width: 100, height: 66)
-        render(box)
-        setFrameSize(NSMakeSize(400, 400))
-        needsDisplay = true
-    }
 
-    @objc func resetClicked(_ sender: NSButton) {
-        resetView()
+    func reset() {
+        box = CGRect(x: 60, y: 60, width: 100, height: 66)
+        setFrameSize(NSMakeSize(defaultWidth, defaultHeight))
+        needsDisplay = true
     }
 
     override var isFlipped: Bool { return true }
@@ -94,6 +81,14 @@ class BackgroundView: NSView {
         render(box)
     }
 
+    private func resizeFrame(box: CGRect) {
+        let height = box.maxY < (defaultHeight + defaultMargin) ? bounds.height : box.maxY + defaultMargin
+        let width = box.maxX < (defaultWidth + defaultMargin) ? defaultWidth : box.maxX + defaultMargin
+        setFrameSize(NSMakeSize(width, height))
+    }
+
+    // MARK: - Actions (NSResponder)
+
     override func mouseDown(with event: NSEvent) {
         let place = convert(event.locationInWindow, from: nil)
         if box.contains(place) {
@@ -111,36 +106,98 @@ class BackgroundView: NSView {
         if !dragging { return }
         let place = convert(event.locationInWindow, from: nil)
         box = CGRect(x: place.x - offsetX, y: place.y - offsetY, width: box.width, height: box.height)
-
         resizeFrame(box: box)
         render(box)
         needsDisplay = true
     }
+}
 
-    func resizeFrame(box: CGRect) {
-        let height = box.maxY < 410 ? bounds.height : box.maxY + 10
-        let width = box.maxX < 410 ? 400 : box.maxX + 10
-        setFrameSize(NSMakeSize(width, height))
+
+class NCControlBar: NSView {
+
+    enum Action {
+        case reset
+    }
+
+    private var resetButton = NSButton()
+
+    var action: ((Action) -> Void)?
+
+    init() {
+        super.init(frame: .zero)
+
+        addSubview(resetButton)
+        resetButton.translatesAutoresizingMaskIntoConstraints = false
+        resetButton.title = "Reset"
+        resetButton.bezelStyle = .roundRect
+        resetButton.action = #selector(resetButtonClicked(_:))
+        resetButton.target = self
+        resetButton.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            resetButton.topAnchor.constraint(equalTo: topAnchor, constant: 10),
+            resetButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+            resetButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10)
+            ])
+
+        wantsLayer = true
+    }
+
+    required init?(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+    }
+
+    @objc func resetButtonClicked(_ sender: NSButton) {
+        action?(.reset)
     }
 }
 
 class ViewController: NSViewController {
 
     var scrollView = NSScrollView(frame: NSMakeRect(0, 0, 300, 300))
+    var backgroundView = NCGridView()
+    var controlBar = NCControlBar()
 
     override func loadView() {
-        let bg = BackgroundView()
-        scrollView.documentView = bg
+        let view = NSView()
+
+        scrollView.documentView = backgroundView
         scrollView.contentView.setValue(true, forKey: "flipped")
         scrollView.hasHorizontalScroller = true
         scrollView.hasVerticalScroller = true
-        self.view = scrollView
+
+        view.addSubview(controlBar)
+        view.addSubview(scrollView)
+
+        controlBar.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+            controlBar.topAnchor.constraint(equalTo: view.topAnchor),
+            controlBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            controlBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+
+            scrollView.topAnchor.constraint(equalTo: controlBar.bottomAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+
+        self.view = view
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-//        let pt = NSMakePoint(0.0, (scrollView.documentView?.bounds.size.height)!)
-//
-//        scrollView.documentView?.scroll(pt)
+        controlBar.action = controlBarAction
+    }
+
+    private func controlBarAction(_ action: NCControlBar.Action) {
+        switch action {
+        case .reset: backgroundView.reset()
+        }
     }
 }

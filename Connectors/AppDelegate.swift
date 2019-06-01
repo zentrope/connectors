@@ -12,6 +12,8 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        //NSApp.mainWindow?.isMovableByWindowBackground = true
+        NSApp.mainWindow?.setContentSize(NSMakeSize(800, 600))
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
