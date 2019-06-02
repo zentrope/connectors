@@ -61,8 +61,8 @@
 			children = (
 				533AE17A22A1F163000791E1 /* AppDelegate.swift */,
 				533AE17C22A1F163000791E1 /* ViewController.swift */,
-				53EC93C222A38DB8002A339E /* Views */,
 				533AE18A22A1F17E000791E1 /* Support */,
+				53EC93CA22A3B97F002A339E /* Views */,
 			);
 			path = Connectors;
 			sourceTree = "<group>";
@@ -78,14 +78,14 @@
 			name = Support;
 			sourceTree = "<group>";
 		};
-		53EC93C222A38DB8002A339E /* Views */ = {
+		53EC93CA22A3B97F002A339E /* Views */ = {
 			isa = PBXGroup;
 			children = (
 				53EC93C722A38E75002A339E /* NCCanvasView.swift */,
 				53EC93C322A38DE9002A339E /* NCControlBar.swift */,
 				53EC93C522A38E18002A339E /* NCGridView.swift */,
 			);
-			name = Views;
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
