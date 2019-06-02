@@ -39,7 +39,6 @@ class NCCanvasView: NSView {
     }
 
     func reset() {
-        print("reset")
         gridView.reset()
     }
 }
