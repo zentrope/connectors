@@ -13,6 +13,7 @@ class NCControlBar: NSView {
     enum Action {
         case reset
         case addNode
+        case removeNode
     }
 
     private lazy var resetButton : NSButton = {
@@ -37,6 +38,17 @@ class NCControlBar: NSView {
         return b
     }()
 
+    private lazy var delButton: NSButton = {
+        let b = NSButton()
+        b.bezelStyle = .roundRect
+        b.isBordered = false
+        b.image = NSImage(named: NSImage.removeTemplateName)
+        b.action = #selector(buttonClicked(_:))
+        b.target = self
+        b.toolTip = "Delete selected node"
+        return b
+    }()
+
     var action: ((Action) -> Void)?
 
     init() {
@@ -44,16 +56,20 @@ class NCControlBar: NSView {
 
         addSubview(resetButton)
         addSubview(addButton)
+        addSubview(delButton)
 
         resetButton.translatesAutoresizingMaskIntoConstraints = false
         addButton.translatesAutoresizingMaskIntoConstraints = false
+        delButton.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
             resetButton.topAnchor.constraint(equalTo: topAnchor, constant: 10),
             resetButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
             resetButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10),
-            addButton.trailingAnchor.constraint(equalTo: resetButton.leadingAnchor, constant: -20),
-            addButton.centerYAnchor.constraint(equalTo: resetButton.centerYAnchor)
+            delButton.trailingAnchor.constraint(equalTo: resetButton.leadingAnchor, constant: -20),
+            delButton.centerYAnchor.constraint(equalTo: resetButton.centerYAnchor),
+            addButton.trailingAnchor.constraint(equalTo: delButton.leadingAnchor, constant: -20),
+            addButton.centerYAnchor.constraint(equalTo: delButton.centerYAnchor),
         ])
 
         wantsLayer = true
@@ -74,6 +90,8 @@ class NCControlBar: NSView {
             action?(.reset)
         case addButton:
             action?(.addNode)
+        case delButton:
+            action?(.removeNode)
         default:
             break
         }

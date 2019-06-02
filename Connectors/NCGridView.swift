@@ -73,6 +73,14 @@ class NCGridView: NSView {
     func addNode() {
         let box = Box(origin: NSPoint(x: 60, y: 60))
         boxes.append(box)
+        selectedBox = box
+        needsDisplay = true
+    }
+
+    func removeNode() {
+        guard let selected = selectedBox else { return }
+        boxes.removeAll(where: { $0 === selected })
+        selectedBox = nil
         needsDisplay = true
     }
 
@@ -139,15 +147,14 @@ class NCGridView: NSView {
     // MARK: - Actions (NSResponder)
 
     override func mouseDown(with event: NSEvent) {
-
         let place = convert(event.locationInWindow, from: nil)
-
-        for box in boxes {
+        for box in boxes.reversed() {
             if box.contains(place) {
                 selectedBox = box
                 offsetX = place.x - box.rect.minX
                 offsetY = place.y - box.rect.minY
                 dragging = true
+                needsDisplay = true
                 break
             }
         }

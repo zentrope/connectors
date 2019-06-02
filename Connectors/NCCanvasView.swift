@@ -45,4 +45,8 @@ class NCCanvasView: NSView {
     func addNode() {
         gridView.addNode()
     }
+
+    func removeNode() {
+        gridView.removeNode()
+    }
 }
