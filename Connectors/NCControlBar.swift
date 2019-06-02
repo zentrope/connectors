@@ -10,58 +10,21 @@ import Cocoa
 
 class NCControlBar: NSView {
 
-    enum Action {
-        case reset
-        case addNode
-        case removeNode
-        case moveNodeDown
-        case moveNodeUp
-    }
-
-    private lazy var resetButton : NSButton = {
-        let b = NSButton()
-        b.bezelStyle = .roundRect
-        b.isBordered = false
-        b.image = NSImage(named: NSImage.refreshTemplateName)
-        b.action = #selector(buttonClicked(_:))
-        b.target = self
-        b.toolTip = "Reset everything and start over"
-        return b
-    }()
-
-    private lazy var addButton: NSButton = {
-        let b = NSButton()
-        b.bezelStyle = .roundRect
-        b.isBordered = false
-        b.image = NSImage(named: NSImage.addTemplateName)
-        b.action = #selector(buttonClicked(_:))
-        b.target = self
-        b.toolTip = "Add a new node"
-        return b
-    }()
-
-    private lazy var delButton: NSButton = {
-        let b = NSButton()
-        b.bezelStyle = .roundRect
-        b.isBordered = false
-        b.image = NSImage(named: NSImage.removeTemplateName)
-        b.action = #selector(buttonClicked(_:))
-        b.target = self
-        b.toolTip = "Delete selected node"
-        return b
-    }()
-
+    private var resetButton = NSButton()
+    private var addButton = NSButton()
+    private var delButton = NSButton()
     private var moveUp = NSButton()
     private var moveDown = NSButton()
 
-    var action: ((Action) -> Void)?
+    var action: ((NCGridView.Action) -> Void)?
 
     init() {
-
-
         super.init(frame: .zero)
-        setButton(moveUp, named: NSImage.touchBarGoUpTemplateName, tooltip: "Move node up.")
-        setButton(moveDown, named: NSImage.touchBarGoDownTemplateName, tooltip: "Move node down.")
+        setButton(resetButton, named: NSImage.refreshTemplateName, tooltip: "Cascade nodes")
+        setButton(addButton, named: NSImage.addTemplateName, tooltip: "Add a new node")
+        setButton(delButton, named: NSImage.removeTemplateName, tooltip: "Delete selected node")
+        setButton(moveUp, named: NSImage.touchBarGoUpTemplateName, tooltip: "Move node up")
+        setButton(moveDown, named: NSImage.touchBarGoDownTemplateName, tooltip: "Move node down")
 
         addSubview(resetButton)
         addSubview(addButton)
@@ -115,13 +78,13 @@ class NCControlBar: NSView {
         case resetButton:
             action?(.reset)
         case addButton:
-            action?(.addNode)
+            action?(.add)
         case delButton:
-            action?(.removeNode)
+            action?(.remove)
         case moveDown:
-            action?(.moveNodeDown)
+            action?(.down)
         case moveUp:
-            action?(.moveNodeUp)
+            action?(.up)
         default:
             break
         }

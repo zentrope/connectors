@@ -43,7 +43,7 @@ class ViewController: NSViewController {
         controlBar.action = controlBarAction
     }
 
-    private func controlBarAction(_ action: NCControlBar.Action) {
+    private func controlBarAction(_ action: NCGridView.Action) {
         canvasView.command(action)
     }
 }

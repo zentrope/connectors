@@ -38,7 +38,7 @@ class NCCanvasView: NSView {
         super.draw(dirtyRect)
     }
 
-    func command(_ action: NCControlBar.Action) {
+    func command(_ action: NCGridView.Action) {
         gridView.command(action)
     }
 }

@@ -8,7 +8,6 @@
 
 import Cocoa
 
-
 class Box {
 
     private var position: NSPoint
@@ -30,6 +29,14 @@ class Box {
 }
 
 class NCGridView: NSView {
+
+    enum Action {
+        case reset
+        case add
+        case remove
+        case down
+        case up
+    }
 
     private let defaultWidth = CGFloat(500)
     private let defaultHeight = CGFloat(500)
@@ -61,60 +68,57 @@ class NCGridView: NSView {
 
     // MARK: - Public
 
-    func reset() {
+    // TODO: Separate the data model from the render stuff
+    func command(_ action: NCGridView.Action) {
+        switch action {
+        case .reset:
+            reset()
+        case .add:
+            addNode()
+        case .remove:
+            removeNode()
+        case .up:
+            moveNodeUp()
+        case .down:
+            moveNodeDown()
+        }
+        needsDisplay = true
+    }
+
+    // MARK: - Implementation details
+
+    private func reset() {
         for (index, box) in boxes.reversed().enumerated() {
             box.moveTo(NSPoint(x: 60 + (index * 20), y: 60 + (index * 20)))
         }
         resizeFrame()
-        needsDisplay = true
     }
 
-    func addNode() {
+    private func addNode() {
         let box = Box(origin: NSPoint(x: 60, y: 60))
         boxes.insert(box, at: 0)
         selectedBox = box
         resizeFrame()
-        needsDisplay = true
     }
 
-    func removeNode() {
+    private func removeNode() {
         guard let selected = selectedBox else { return }
         boxes.removeAll(where: { $0 === selected })
         selectedBox = nil
         resizeFrame()
-        needsDisplay = true
     }
 
-    func moveNodeUp() {
+    private func moveNodeUp() {
         guard let selected = selectedBox else { return }
         guard let index = boxes.firstIndex(where: { $0 === selected }), index != 0 else { return }
         boxes.insert(boxes.remove(at: index), at: index - 1)
-        needsDisplay = true
     }
 
-    func moveNodeDown() {
+    private func moveNodeDown() {
         guard let selected = selectedBox else { return }
         guard let index = boxes.firstIndex(where: { $0 === selected }), index != (boxes.count - 1) else { return }
         boxes.insert(boxes.remove(at: index), at: index + 1)
-        needsDisplay = true
     }
-
-    func command(_ action: NCControlBar.Action) {
-        switch action {
-        case .reset:
-            reset()
-        case .addNode:
-            addNode()
-        case .removeNode:
-            removeNode()
-        case .moveNodeUp:
-            moveNodeUp()
-        case .moveNodeDown:
-            moveNodeDown()
-        }
-    }
-
-    // MARK: - Implementation details
 
     override var isFlipped: Bool { return true }
 
