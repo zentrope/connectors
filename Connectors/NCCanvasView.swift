@@ -38,15 +38,7 @@ class NCCanvasView: NSView {
         super.draw(dirtyRect)
     }
 
-    func reset() {
-        gridView.reset()
-    }
-
-    func addNode() {
-        gridView.addNode()
-    }
-
-    func removeNode() {
-        gridView.removeNode()
+    func command(_ action: NCControlBar.Action) {
+        gridView.command(action)
     }
 }

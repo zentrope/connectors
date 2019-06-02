@@ -27,7 +27,6 @@ class Box {
     func contains(_ point: NSPoint) -> Bool {
         return rect.contains(point)
     }
-
 }
 
 class NCGridView: NSView {
@@ -63,7 +62,7 @@ class NCGridView: NSView {
     // MARK: - Public
 
     func reset() {
-        for (index, box) in boxes.enumerated() {
+        for (index, box) in boxes.reversed().enumerated() {
             box.moveTo(NSPoint(x: 60 + (index * 20), y: 60 + (index * 20)))
         }
         resizeFrame()
@@ -72,8 +71,9 @@ class NCGridView: NSView {
 
     func addNode() {
         let box = Box(origin: NSPoint(x: 60, y: 60))
-        boxes.append(box)
+        boxes.insert(box, at: 0)
         selectedBox = box
+        resizeFrame()
         needsDisplay = true
     }
 
@@ -81,7 +81,37 @@ class NCGridView: NSView {
         guard let selected = selectedBox else { return }
         boxes.removeAll(where: { $0 === selected })
         selectedBox = nil
+        resizeFrame()
         needsDisplay = true
+    }
+
+    func moveNodeUp() {
+        guard let selected = selectedBox else { return }
+        guard let index = boxes.firstIndex(where: { $0 === selected }), index != 0 else { return }
+        boxes.insert(boxes.remove(at: index), at: index - 1)
+        needsDisplay = true
+    }
+
+    func moveNodeDown() {
+        guard let selected = selectedBox else { return }
+        guard let index = boxes.firstIndex(where: { $0 === selected }), index != (boxes.count - 1) else { return }
+        boxes.insert(boxes.remove(at: index), at: index + 1)
+        needsDisplay = true
+    }
+
+    func command(_ action: NCControlBar.Action) {
+        switch action {
+        case .reset:
+            reset()
+        case .addNode:
+            addNode()
+        case .removeNode:
+            removeNode()
+        case .moveNodeUp:
+            moveNodeUp()
+        case .moveNodeDown:
+            moveNodeDown()
+        }
     }
 
     // MARK: - Implementation details
@@ -124,8 +154,8 @@ class NCGridView: NSView {
             context.setStrokeColor(NSColor.orange.cgColor)
         }
 
-        let p = NSBezierPath(roundedRect: box.rect, xRadius: 7, yRadius: 7)
-        p.lineWidth = 2
+        let p = NSBezierPath(roundedRect: box.rect, xRadius: 4, yRadius: 4)
+        p.lineWidth = 1
         p.fill()
         p.stroke()
     }
@@ -133,13 +163,13 @@ class NCGridView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         drawGrid()
-        boxes.forEach { render($0) }
+        boxes.reversed().forEach { render($0) }
     }
 
     private func resizeFrame() {
         let maxY = boxes.map { $0.rect.maxY }.max() ?? defaultHeight
         let maxX = boxes.map { $0.rect.maxX }.max() ?? defaultWidth
-        let height = maxY < (defaultHeight + defaultMargin) ? bounds.height : maxY + defaultMargin
+        let height = maxY < (defaultHeight + defaultMargin) ? defaultHeight : maxY + defaultMargin
         let width = maxX < (defaultWidth + defaultMargin) ? defaultWidth : maxX + defaultMargin
         setFrameSize(NSMakeSize(width, height))
     }
@@ -148,7 +178,7 @@ class NCGridView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let place = convert(event.locationInWindow, from: nil)
-        for box in boxes.reversed() {
+        for box in boxes {
             if box.contains(place) {
                 selectedBox = box
                 offsetX = place.x - box.rect.minX
