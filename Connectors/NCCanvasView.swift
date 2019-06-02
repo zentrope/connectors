@@ -41,4 +41,8 @@ class NCCanvasView: NSView {
     func reset() {
         gridView.reset()
     }
+
+    func addNode() {
+        gridView.addNode()
+    }
 }

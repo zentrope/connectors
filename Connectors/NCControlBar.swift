@@ -12,9 +12,30 @@ class NCControlBar: NSView {
 
     enum Action {
         case reset
+        case addNode
     }
 
-    private var resetButton = NSButton()
+    private lazy var resetButton : NSButton = {
+        let b = NSButton()
+        b.bezelStyle = .roundRect
+        b.isBordered = false
+        b.image = NSImage(named: NSImage.refreshTemplateName)
+        b.action = #selector(buttonClicked(_:))
+        b.target = self
+        b.toolTip = "Reset everything and start over"
+        return b
+    }()
+
+    private lazy var addButton: NSButton = {
+        let b = NSButton()
+        b.bezelStyle = .roundRect
+        b.isBordered = false
+        b.image = NSImage(named: NSImage.addTemplateName)
+        b.action = #selector(buttonClicked(_:))
+        b.target = self
+        b.toolTip = "Add a new node"
+        return b
+    }()
 
     var action: ((Action) -> Void)?
 
@@ -22,19 +43,18 @@ class NCControlBar: NSView {
         super.init(frame: .zero)
 
         addSubview(resetButton)
+        addSubview(addButton)
+
         resetButton.translatesAutoresizingMaskIntoConstraints = false
-        resetButton.bezelStyle = .roundRect
-        resetButton.isBordered = false
-        resetButton.image = NSImage(named: NSImage.refreshTemplateName)
-        resetButton.action = #selector(resetButtonClicked(_:))
-        resetButton.target = self
-        resetButton.toolTip = "Reset everything and start over"
-        resetButton.translatesAutoresizingMaskIntoConstraints = false
+        addButton.translatesAutoresizingMaskIntoConstraints = false
+
         NSLayoutConstraint.activate([
             resetButton.topAnchor.constraint(equalTo: topAnchor, constant: 10),
             resetButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
-            resetButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10)
-            ])
+            resetButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10),
+            addButton.trailingAnchor.constraint(equalTo: resetButton.leadingAnchor, constant: -20),
+            addButton.centerYAnchor.constraint(equalTo: resetButton.centerYAnchor)
+        ])
 
         wantsLayer = true
     }
@@ -48,7 +68,14 @@ class NCControlBar: NSView {
         layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
     }
 
-    @objc func resetButtonClicked(_ sender: NSButton) {
-        action?(.reset)
+    @objc func buttonClicked(_ sender: NSButton) {
+        switch sender {
+        case resetButton:
+            action?(.reset)
+        case addButton:
+            action?(.addNode)
+        default:
+            break
+        }
     }
 }

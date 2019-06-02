@@ -48,6 +48,8 @@ class NCGridView: NSView {
     private var offsetX: CGFloat = 10.0
     private var offsetY: CGFloat = 10.0
 
+    // MARK: - Init
+
     init() {
         super.init(frame: NSMakeRect(0, 0, defaultWidth, defaultHeight))
         wantsLayer = true
@@ -58,6 +60,8 @@ class NCGridView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // MARK: - Public
+
     func reset() {
         for (index, box) in boxes.enumerated() {
             box.moveTo(NSPoint(x: 60 + (index * 20), y: 60 + (index * 20)))
@@ -65,6 +69,14 @@ class NCGridView: NSView {
         resizeFrame()
         needsDisplay = true
     }
+
+    func addNode() {
+        let box = Box(origin: NSPoint(x: 60, y: 60))
+        boxes.append(box)
+        needsDisplay = true
+    }
+
+    // MARK: - Implementation details
 
     override var isFlipped: Bool { return true }
 
@@ -97,9 +109,14 @@ class NCGridView: NSView {
     private func render(_ box: Box) {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         context.setFillColor(NSColor.controlBackgroundColor.cgColor)
-        context.setStrokeColor(NSColor.orange.cgColor)
 
-        let p = NSBezierPath(roundedRect: box.rect, xRadius: 10, yRadius: 10)
+        if let selected = selectedBox, selected === box {
+            context.setStrokeColor(NSColor.controlAccentColor.cgColor)
+        } else {
+            context.setStrokeColor(NSColor.orange.cgColor)
+        }
+
+        let p = NSBezierPath(roundedRect: box.rect, xRadius: 7, yRadius: 7)
         p.lineWidth = 2
         p.fill()
         p.stroke()

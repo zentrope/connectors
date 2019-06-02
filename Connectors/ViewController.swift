@@ -46,6 +46,7 @@ class ViewController: NSViewController {
     private func controlBarAction(_ action: NCControlBar.Action) {
         switch action {
         case .reset: canvasView.reset()
+        case .addNode: canvasView.addNode()
         }
     }
 }
