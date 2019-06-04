@@ -8,25 +8,6 @@
 
 import Cocoa
 
-class Box {
-
-    private var position: NSPoint
-    private var size = NSSize(width: 100, height: 66)
-
-    var rect: CGRect { return CGRect(origin: position, size: size) }
-
-    init(origin: NSPoint) {
-        self.position = origin
-    }
-
-    func moveTo(_ position: NSPoint) {
-        self.position = position
-    }
-
-    func contains(_ point: NSPoint) -> Bool {
-        return rect.contains(point)
-    }
-}
 
 class NCGridView: NSView {
 
@@ -42,17 +23,32 @@ class NCGridView: NSView {
     private let defaultHeight = CGFloat(500)
     private let defaultMargin = CGFloat(10)
 
+    // First position is top of the view hierarchy
+
     private var boxes = [
         Box(origin: NSPoint(x: 60, y: 60)),
         Box(origin: NSPoint(x: 100, y: 100))
     ]
 
-    // MARK: - State while dragging a box
+    private var connectors = Set<Connector>()
 
-    private var selectedBox: Box?
+    // TODO: boxes and connectors should be a Set<Node>.
+
+    // MARK: - State while dragging a thing?
+
+    private var selectedObject: Node?
+
     private var dragging = false
     private var offsetX: CGFloat = 10.0
     private var offsetY: CGFloat = 10.0
+
+
+    // MARK: - State while connecting
+
+    private var connecting = false
+    private var targetBox: Box?
+    private var connectEndPoint = NSPoint(x: 0, y: 0)
+    private var connectStartPoint = NSPoint(x: 0, y: 0)
 
     // MARK: - Init
 
@@ -66,9 +62,23 @@ class NCGridView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // MARK: - Overrides
+
+    override var isFlipped: Bool { return true }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        resizeToFit()
+        drawGrid()
+        drawConnections()
+        drawBoxes()
+        drawConnector()
+    }
+
     // MARK: - Public
 
-    // TODO: Separate the data model from the render stuff
+    // TODO: Separate the state management from the render stuff
+
     func command(_ action: NCGridView.Action) {
         switch action {
         case .reset:
@@ -91,36 +101,32 @@ class NCGridView: NSView {
         for (index, box) in boxes.reversed().enumerated() {
             box.moveTo(NSPoint(x: 60 + (index * 20), y: 60 + (index * 20)))
         }
-        resizeFrame()
     }
 
     private func addNode() {
         let box = Box(origin: NSPoint(x: 60, y: 60))
         boxes.insert(box, at: 0)
-        selectedBox = box
-        resizeFrame()
+        selectedObject = box
     }
 
     private func removeNode() {
-        guard let selected = selectedBox else { return }
-        boxes.removeAll(where: { $0 === selected })
-        selectedBox = nil
-        resizeFrame()
+        guard let selected = selectedObject as? Box else { return }
+        boxes.removeAll { $0 === selected }
+        connectors = connectors.filter { $0.fromBox !== selected && $0.toBox !== selected }
+        selectedObject = nil
     }
 
     private func moveNodeUp() {
-        guard let selected = selectedBox else { return }
+        guard let selected = selectedObject as? Box else { return }
         guard let index = boxes.firstIndex(where: { $0 === selected }), index != 0 else { return }
         boxes.insert(boxes.remove(at: index), at: index - 1)
     }
 
     private func moveNodeDown() {
-        guard let selected = selectedBox else { return }
+        guard let selected = selectedObject as? Box else { return }
         guard let index = boxes.firstIndex(where: { $0 === selected }), index != (boxes.count - 1) else { return }
         boxes.insert(boxes.remove(at: index), at: index + 1)
     }
-
-    override var isFlipped: Bool { return true }
 
     private func drawGrid() {
         let gridSize = 20
@@ -148,29 +154,53 @@ class NCGridView: NSView {
         context.strokePath()
     }
 
-    private func render(_ box: Box) {
+    private func drawBoxes() {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         context.setFillColor(NSColor.controlBackgroundColor.cgColor)
 
-        if let selected = selectedBox, selected === box {
-            context.setStrokeColor(NSColor.controlAccentColor.cgColor)
-        } else {
-            context.setStrokeColor(NSColor.orange.cgColor)
-        }
+        boxes.reversed().forEach { box in
+            if let selected = selectedObject as? Box, selected === box {
+                context.setStrokeColor(NSColor.controlAccentColor.cgColor)
+            } else if let target = targetBox, target === box {
+                context.setStrokeColor(NSColor.controlAccentColor.cgColor)
+            } else {
+                context.setStrokeColor(NSColor.orange.cgColor)
+            }
 
-        let p = NSBezierPath(roundedRect: box.rect, xRadius: 4, yRadius: 4)
-        p.lineWidth = 1
-        p.fill()
+            let p = NSBezierPath(roundedRect: box.rect, xRadius: 4, yRadius: 4)
+            p.lineWidth = 1
+            p.fill()
+            p.stroke()
+        }
+    }
+
+    private func drawConnector() {
+        if !connecting {
+            return
+        }
+        NSGraphicsContext.current?.cgContext.setStrokeColor(NSColor.systemGray.cgColor)
+        let p = NSBezierPath()
+        p.move(to: connectStartPoint)
+        p.line(to: connectEndPoint)
+        p.lineWidth = 4
         p.stroke()
     }
 
-    override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-        drawGrid()
-        boxes.reversed().forEach { render($0) }
+    private func drawConnections() {
+        let context = NSGraphicsContext.current?.cgContext //.setStrokeColor(NSColor.systemGray.cgColor)
+        for connector in connectors {
+            if let selection = selectedObject as? Connector, selection == connector {
+                context?.setFillColor(NSColor.systemRed.cgColor)
+            } else {
+                context?.setFillColor(NSColor.systemGray.cgColor)
+            }
+            let path = connector.path
+            path.lineWidth = 0
+            path.fill()
+        }
     }
 
-    private func resizeFrame() {
+    private func resizeToFit() {
         let maxY = boxes.map { $0.rect.maxY }.max() ?? defaultHeight
         let maxX = boxes.map { $0.rect.maxX }.max() ?? defaultWidth
         let height = maxY < (defaultHeight + defaultMargin) ? defaultHeight : maxY + defaultMargin
@@ -178,18 +208,64 @@ class NCGridView: NSView {
         setFrameSize(NSMakeSize(width, height))
     }
 
-    // MARK: - Actions (NSResponder)
+    // MARK: - Connect node actions
+
+    override func rightMouseDown(with event: NSEvent) {
+        let place = convert(event.locationInWindow, from: nil)
+        for box in boxes {
+            if box.contains(place) {
+                selectedObject = box
+                connecting = true
+                let x = box.rect.maxX - (box.rect.width / 2)
+                let y = box.rect.maxY - (box.rect.height / 2)
+                connectStartPoint = NSMakePoint(x,y)
+                connectEndPoint = place
+                needsDisplay = true
+                break
+            }
+        }
+    }
+
+    override func rightMouseDragged(with event: NSEvent) {
+        if connecting {
+            let place = convert(event.locationInWindow, from: nil)
+            connectEndPoint = place
+            targetBox = boxes.first { $0.contains(place) }
+            needsDisplay = true
+        }
+    }
+
+    override func rightMouseUp(with event: NSEvent) {
+        connecting = false
+        if let targetBox = targetBox,
+            let selectedBox = selectedObject as? Box {
+            let connector = Connector(fromBox: selectedBox, toBox: targetBox)
+            connectors.insert(connector)
+        }
+        targetBox = nil
+        needsDisplay = true
+    }
+
+    // MARK: - Move/Select node actions
 
     override func mouseDown(with event: NSEvent) {
         let place = convert(event.locationInWindow, from: nil)
         for box in boxes {
             if box.contains(place) {
-                selectedBox = box
+                selectedObject = box
                 offsetX = place.x - box.rect.minX
                 offsetY = place.y - box.rect.minY
                 dragging = true
                 needsDisplay = true
-                break
+                return
+            }
+        }
+
+        for conn in connectors {
+            if conn.contains(place) {
+                selectedObject = conn
+                needsDisplay = true
+                return
             }
         }
     }
@@ -200,12 +276,10 @@ class NCGridView: NSView {
 
     override func mouseDragged(with event: NSEvent) {
         if !dragging { return }
-        guard let box = selectedBox else { return }
+        guard let box = selectedObject as? Box else { return }
         let place = convert(event.locationInWindow, from: nil)
         let newOrigin = NSMakePoint(place.x - offsetX, place.y - offsetY)
         box.moveTo(newOrigin)
-        resizeFrame()
-        render(box)
         needsDisplay = true
     }
 }
