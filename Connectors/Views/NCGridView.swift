@@ -22,6 +22,7 @@ class NCGridView: NSView {
     private let defaultWidth = CGFloat(500)
     private let defaultHeight = CGFloat(500)
     private let defaultMargin = CGFloat(10)
+    private let defaultConnectorWidth = 2.0
 
     // First position is top of the view hierarchy
 
@@ -178,11 +179,11 @@ class NCGridView: NSView {
         if !connecting {
             return
         }
-        NSGraphicsContext.current?.cgContext.setStrokeColor(NSColor.systemGray.cgColor)
+        NSGraphicsContext.current?.cgContext.setStrokeColor(NSColor.controlAccentColor.cgColor)
         let p = NSBezierPath()
         p.move(to: connectStartPoint)
         p.line(to: connectEndPoint)
-        p.lineWidth = 4
+        p.lineWidth = CGFloat(defaultConnectorWidth)
         p.stroke()
     }
 
@@ -238,8 +239,9 @@ class NCGridView: NSView {
     override func rightMouseUp(with event: NSEvent) {
         connecting = false
         if let targetBox = targetBox,
-            let selectedBox = selectedObject as? Box {
-            let connector = Connector(fromBox: selectedBox, toBox: targetBox)
+            let selectedBox = selectedObject as? Box,
+            targetBox != selectedBox {
+            let connector = Connector(fromBox: selectedBox, toBox: targetBox, lineWidth: defaultConnectorWidth)
             connectors.insert(connector)
         }
         targetBox = nil

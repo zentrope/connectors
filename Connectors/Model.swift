@@ -14,15 +14,15 @@ enum Shape {
 }
 
 protocol Node {
-    //    var id : String { get }
+    var id : String { get }
     var path: NSBezierPath { get }
     var type: Shape { get }
     func contains(_ point: NSPoint) -> Bool
 }
 
-class Box: Node, Equatable, Hashable {
+class Box: Node, Hashable {
 
-    private var id: String = UUID().uuidString
+    let id: String = UUID().uuidString
     private var position: NSPoint
     private var size = NSSize(width: 100, height: 66)
 
@@ -35,7 +35,7 @@ class Box: Node, Equatable, Hashable {
         }
     }
 
-    var connectPoint: NSPoint {
+    var anchor: NSPoint {
         return NSMakePoint(rect.minX + (rect.width / 2), rect.minY + (rect.height / 2))
     }
 
@@ -60,18 +60,18 @@ class Box: Node, Equatable, Hashable {
     }
 }
 
-class Connector: Node, Equatable, Hashable {
+class Connector: Node, Hashable {
 
+    let id = UUID().uuidString
     let type = Shape.connector
-    private let width = CGFloat(10)
 
     var path: NSBezierPath {
         get {
             let p = NSBezierPath()
-            let x0 = fromBox.connectPoint.x
-            let y0 = fromBox.connectPoint.y
-            let x1 = toBox.connectPoint.x
-            let y1 = toBox.connectPoint.y
+            let x0 = fromBox.anchor.x
+            let y0 = fromBox.anchor.y
+            let x1 = toBox.anchor.x
+            let y1 = toBox.anchor.y
 
             var dx = Double(x1 - x0)
             var dy = Double(y1 - y0)
@@ -80,9 +80,8 @@ class Connector: Node, Equatable, Hashable {
             dx = dx / len
             dy = dy / len
 
-            let w = 4.0
-            let px = CGFloat(w / 2 * (-dy))
-            let py = CGFloat(w / 2 * dx)
+            let px = CGFloat(lineWidth / 2 * (-dy))
+            let py = CGFloat(lineWidth / 2 * dx)
 
             p.move(to: NSMakePoint(x0 + px, y0 + py))
             p.line(to: NSMakePoint(x1 + px, y1 + py))
@@ -96,9 +95,12 @@ class Connector: Node, Equatable, Hashable {
     private(set) var fromBox: Box
     private(set) var toBox: Box
 
-    init(fromBox: Box, toBox: Box) {
+    private let lineWidth : Double
+
+    init(fromBox: Box, toBox: Box, lineWidth: Double = 2) {
         self.fromBox = fromBox
         self.toBox = toBox
+        self.lineWidth = lineWidth
     }
 
     func contains(_ point: NSPoint) -> Bool {
@@ -106,7 +108,7 @@ class Connector: Node, Equatable, Hashable {
     }
 
     static func == (lhs: Connector, rhs: Connector) -> Bool {
-        return lhs.fromBox == rhs.fromBox && lhs.toBox == rhs.toBox
+        return lhs.fromBox.id == rhs.fromBox.id && lhs.toBox.id == rhs.toBox.id
     }
 
     func hash(into hasher: inout Hasher) {
