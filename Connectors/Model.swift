@@ -68,26 +68,9 @@ class Connector: Node, Hashable {
     var path: NSBezierPath {
         get {
             let p = NSBezierPath()
-            let x0 = fromBox.anchor.x
-            let y0 = fromBox.anchor.y
-            let x1 = toBox.anchor.x
-            let y1 = toBox.anchor.y
-
-            var dx = Double(x1 - x0)
-            var dy = Double(y1 - y0)
-            let len = sqrt(dx * dx + dy * dy)
-
-            dx = dx / len
-            dy = dy / len
-
-            let px = CGFloat(lineWidth / 2 * (-dy))
-            let py = CGFloat(lineWidth / 2 * dx)
-
-            p.move(to: NSMakePoint(x0 + px, y0 + py))
-            p.line(to: NSMakePoint(x1 + px, y1 + py))
-            p.line(to: NSMakePoint(x1 - px, y1 - py))
-            p.line(to: NSMakePoint(x0 - px, y0 - py))
-            p.close()
+            p.move(to: fromBox.anchor)
+            p.line(to: toBox.anchor)
+            p.lineWidth = CGFloat(lineWidth)
             return p
         }
     }
@@ -104,7 +87,9 @@ class Connector: Node, Hashable {
     }
 
     func contains(_ point: NSPoint) -> Bool {
-        return path.contains(point)
+        let p = path.cgPath
+        let p2 = p.copy(strokingWithWidth: CGFloat(lineWidth), lineCap:.round, lineJoin: .round, miterLimit: 1)
+        return p2.contains(point)
     }
 
     static func == (lhs: Connector, rhs: Connector) -> Bool {

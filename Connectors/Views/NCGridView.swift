@@ -191,13 +191,12 @@ class NCGridView: NSView {
         let context = NSGraphicsContext.current?.cgContext //.setStrokeColor(NSColor.systemGray.cgColor)
         for connector in connectors {
             if let selection = selectedObject as? Connector, selection == connector {
-                context?.setFillColor(NSColor.systemRed.cgColor)
+                context?.setStrokeColor(NSColor.systemRed.cgColor)
             } else {
-                context?.setFillColor(NSColor.systemGray.cgColor)
+                context?.setStrokeColor(NSColor.systemGray.cgColor)
             }
             let path = connector.path
-            path.lineWidth = 0
-            path.fill()
+            path.stroke()
         }
     }
 
