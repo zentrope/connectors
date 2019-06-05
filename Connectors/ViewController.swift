@@ -12,8 +12,16 @@ class ViewController: NSViewController {
 
     // TODO: Put state here, then pass it in?
     
-    var canvasView = NCCanvasView()
-    var controlBar = NCControlBar()
+    var canvasView: NCCanvasView
+    var controlBar: NCControlBar
+    var state: State
+
+    required init?(coder: NSCoder) {
+        state = State()
+        canvasView = NCCanvasView(state: state)
+        controlBar = NCControlBar()
+        super.init(coder: coder)
+    }
 
     override func loadView() {
         let view = NSView()
@@ -46,6 +54,23 @@ class ViewController: NSViewController {
     }
 
     private func controlBarAction(_ action: NCGridView.Action) {
-        canvasView.command(action)
+        switch action {
+
+        case .reset:
+            state.clear()
+
+        case .add:
+            state.add(origin: NSPoint(x: 60, y: 60))
+
+        case .remove:
+            state.remove()
+
+        case .up:
+            state.moveUp()
+
+        case .down:
+            state.moveDown()
+        }
+        canvasView.render(state: state)
     }
 }

@@ -10,10 +10,13 @@ import Cocoa
 
 class NCCanvasView: NSView {
 
-    private var gridView = NCGridView()
-    private var scrollView = NSScrollView(frame: .zero)
+    private var gridView: NCGridView
+    private var scrollView: NSScrollView
 
-    init() {
+    init(state: State) {
+        gridView = NCGridView(state: state)
+        scrollView = NSScrollView(frame: .zero)
+
         super.init(frame: .zero)
         scrollView.documentView = gridView
         scrollView.contentView.setValue(true, forKey: "flipped")
@@ -38,7 +41,7 @@ class NCCanvasView: NSView {
         super.draw(dirtyRect)
     }
 
-    func command(_ action: NCGridView.Action) {
-        gridView.command(action)
+    func render(state: State) {
+        gridView.render(state: state)
     }
 }

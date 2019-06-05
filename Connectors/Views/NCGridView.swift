@@ -23,22 +23,6 @@ class NCGridView: NSView {
 
     private var state: State
 
-    // MARK: - State while dragging a thing?
-
-    private var selectedObject: Node?
-
-    private var dragging = false
-    private var offsetX: CGFloat = 10.0
-    private var offsetY: CGFloat = 10.0
-
-
-    // MARK: - State while connecting
-
-    private var connecting = false
-    private var target: Node?
-    private var connectEndPoint = NSPoint(x: 0, y: 0)
-    private var connectStartPoint = NSPoint(x: 0, y: 0)
-
     // MARK: - Init
 
     init(state: State = State()) {
@@ -58,41 +42,24 @@ class NCGridView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        resizeToFit(state)
+        resizeToFit()
         drawGrid()
-        drawConnections(state)
-        drawBoxes(state)
-        drawConnector(state)
+        drawConnections()
+        drawBoxes()
+        drawConnector()
     }
 
     // MARK: - Public
 
-    func command(_ action: NCGridView.Action) {
-        switch action {
-
-        case .reset:
-            state.clear()
-
-        case .add:
-            selectedObject = state.add(origin: NSPoint(x: 60, y: 60))
-
-        case .remove:
-            state.remove(selectedObject)
-            selectedObject = nil
-
-        case .up:
-            state.moveUp(selectedObject)
-
-        case .down:
-            state.moveDown(selectedObject)
-        }
+    func render(state: State) {
+        self.state = state
         needsDisplay = true
     }
 
     // MARK: - Implementation details
 
     private func drawGrid() {
-        let gridSize = 20
+        let gridSize = state.defaultGridSize
 
         guard let context = NSGraphicsContext.current?.cgContext else { return }
 
@@ -117,14 +84,14 @@ class NCGridView: NSView {
         context.strokePath()
     }
 
-    private func drawBoxes(_ state: State) {
+    private func drawBoxes() {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         context.setFillColor(NSColor.controlBackgroundColor.cgColor)
 
         state.boxes.reversed().forEach { box in
-            if let selected = selectedObject as? Box, selected === box {
+            if let selected = state.selectedObject as? Box, selected === box {
                 context.setStrokeColor(NSColor.controlAccentColor.cgColor)
-            } else if let target = target as? Box, target === box {
+            } else if let target = state.target as? Box, target === box {
                 context.setStrokeColor(NSColor.controlAccentColor.cgColor)
             } else {
                 context.setStrokeColor(NSColor.orange.cgColor)
@@ -137,22 +104,22 @@ class NCGridView: NSView {
         }
     }
 
-    private func drawConnector(_ state: State) {
-        if !connecting {
+    private func drawConnector() {
+        if !state.isConnecting {
             return
         }
         NSGraphicsContext.current?.cgContext.setStrokeColor(NSColor.controlAccentColor.cgColor)
         let p = NSBezierPath()
-        p.move(to: connectStartPoint)
-        p.line(to: connectEndPoint)
+        p.move(to: state.connectStartPoint)
+        p.line(to: state.connectEndPoint)
         p.lineWidth = CGFloat(state.defaultConnectorWidth)
         p.stroke()
     }
 
-    private func drawConnections(_ state: State) {
+    private func drawConnections() {
         let context = NSGraphicsContext.current?.cgContext
         for connector in state.connectors {
-            if let selection = selectedObject as? Connector, selection == connector {
+            if let selection = state.selectedObject as? Connector, selection == connector {
                 context?.setStrokeColor(NSColor.systemRed.cgColor)
             } else {
                 context?.setStrokeColor(NSColor.systemGray.cgColor)
@@ -162,12 +129,8 @@ class NCGridView: NSView {
         }
     }
 
-    private func resizeToFit(_ state: State) {
-        let maxY = state.maxY
-        let maxX = state.maxX
-        let height = maxY < (state.defaultHeight + state.defaultMargin) ? state.defaultHeight : maxY + state.defaultMargin
-        let width = maxX < (state.defaultWidth + state.defaultMargin) ? state.defaultWidth : maxX + state.defaultMargin
-        setFrameSize(NSMakeSize(width, height))
+    private func resizeToFit() {
+        setFrameSize(NSMakeSize(state.width, state.height))
     }
 
     // MARK: - Connect node actions
@@ -176,12 +139,12 @@ class NCGridView: NSView {
         let place = convert(event.locationInWindow, from: nil)
         for box in state.boxes {
             if box.contains(place) {
-                selectedObject = box
-                connecting = true
+                state.selectedObject = box
+                state.isConnecting = true
                 let x = box.rect.maxX - (box.rect.width / 2)
                 let y = box.rect.maxY - (box.rect.height / 2)
-                connectStartPoint = NSMakePoint(x,y)
-                connectEndPoint = place
+                state.connectStartPoint = NSMakePoint(x,y)
+                state.connectEndPoint = place
                 needsDisplay = true
                 break
             }
@@ -189,61 +152,43 @@ class NCGridView: NSView {
     }
 
     override func rightMouseDragged(with event: NSEvent) {
-        if connecting {
+        if state.isConnecting {
             let place = convert(event.locationInWindow, from: nil)
-            connectEndPoint = place
-            target = state.boxes.first { $0.contains(place) }
+            state.connectEndPoint = place
+            state.target = state.boxes.first { $0.contains(place) }
             needsDisplay = true
         }
     }
 
     override func rightMouseUp(with event: NSEvent) {
-        connecting = false
-        if let target = target as? Box,
-            let selectedBox = selectedObject as? Box,
+        state.isConnecting = false
+        if let target = state.target as? Box,
+            let selectedBox = state.selectedObject as? Box,
             target != selectedBox {
             state.connect(fromBox: selectedBox, toBox: target)
         }
-        target = nil
+        state.target = nil
         needsDisplay = true
     }
 
     // MARK: - Move/Select node actions
 
     override func mouseDown(with event: NSEvent) {
-        let place = convert(event.locationInWindow, from: nil)
-        for box in state.boxes {
-            if box.contains(place) {
-                selectedObject = box
-                offsetX = place.x - box.rect.minX
-                offsetY = place.y - box.rect.minY
-                dragging = true
-                needsDisplay = true
-                return
-            }
-        }
-
-        for conn in state.connectors {
-            if conn.contains(place) {
-                selectedObject = conn
-                needsDisplay = true
-                return
-            }
-        }
+        needsDisplay = state.select(at: event.place(self))
     }
 
     override func mouseUp(with event: NSEvent) {
-        dragging = false
+        state.isDragging = false
     }
 
     override func mouseDragged(with event: NSEvent) {
-        if !dragging { return }
-        guard let box = selectedObject as? Box else { return }
-        let place = convert(event.locationInWindow, from: nil)
-        let newOrigin = NSMakePoint(place.x - offsetX, place.y - offsetY)
-        box.moveTo(newOrigin)
-        needsDisplay = true
+        needsDisplay = state.moveSelection(to: event.place(self))
     }
 }
 
 
+extension NSEvent {
+    func place(_ view: NSView) -> NSPoint {
+        return view.convert(locationInWindow, from: nil)
+    }
+}
