@@ -13,7 +13,7 @@ enum Shape {
     case connector
 }
 
-protocol Node {
+protocol Node: AnyObject {
     var id : String { get }
     var path: NSBezierPath { get }
     var type: Shape { get }

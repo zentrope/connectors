@@ -10,6 +10,8 @@ import Cocoa
 
 class ViewController: NSViewController {
 
+    // TODO: Put state here, then pass it in?
+    
     var canvasView = NCCanvasView()
     var controlBar = NCControlBar()
 
