@@ -6,7 +6,7 @@
 //  Copyright © 2019 Zentrope. All rights reserved.
 //
 
-import Foundation
+import Cocoa
 
 class State {
 
@@ -17,18 +17,43 @@ class State {
     let defaultWidth = CGFloat(500)
     let defaultHeight = CGFloat(500)
     let defaultMargin = CGFloat(10)
-    let defaultConnectorWidth = 2.0
+    let defaultConnectorWidth = 3.0
 
     var maxY: CGFloat { get { return boxes.map { $0.rect.maxY }.max() ?? defaultHeight }}
     var maxX: CGFloat { get { return boxes.map { $0.rect.maxX }.max() ?? defaultWidth }}
     var height: CGFloat { get { return maxY < (defaultHeight + defaultMargin) ? defaultHeight : maxY + defaultMargin }}
     var width: CGFloat { get { return maxX < (defaultWidth + defaultMargin) ? defaultWidth : maxX + defaultMargin} }
 
-    var selectedObject: Node?
+    var activeConnectionPath: NSBezierPath? {
+        get {
+            if !isConnecting { return nil }
+            let p = NSBezierPath()
+            p.move(to: connectStartPoint)
+            p.line(to: connectEndPoint)
+            p.lineWidth = CGFloat(defaultConnectorWidth)
+            return p
+        }
+    }
 
-    var isDragging = false
-    var offsetX: CGFloat = .zero
-    var offsetY: CGFloat = .zero
+    struct RenderNode {
+        let isSelected: Bool
+        let kind: Shape
+        let path: NSBezierPath
+    }
+
+    var renders: [RenderNode] {
+        get {
+            let bs = boxes.map { RenderNode(isSelected: $0 === selectedObject, kind: .box, path: $0.path)}
+            let cs = connectors.map { RenderNode(isSelected: $0 === selectedObject, kind: .connector, path: $0.path)}
+            return cs + bs.reversed()
+        }
+    }
+
+    private var selectedObject: Node?
+
+    private var isDragging = false
+    private var offsetX: CGFloat = .zero
+    private var offsetY: CGFloat = .zero
 
     private var isConnecting = false
     private var target: Node?

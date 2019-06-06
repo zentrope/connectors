@@ -14,6 +14,8 @@
 		5343AAC022A64175001AE240 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5343AABF22A64175001AE240 /* Model.swift */; };
 		536C5E0A22A785A500BA14BE /* NSBezierPath+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536C5E0922A785A500BA14BE /* NSBezierPath+Ext.swift */; };
 		536C5E0C22A7947900BA14BE /* State.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536C5E0B22A7947900BA14BE /* State.swift */; };
+		5392899E22A8DBBC007B448C /* NSEvent+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5392899D22A8DBBC007B448C /* NSEvent+Ext.swift */; };
+		539289A022A8DBCB007B448C /* CGContext+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5392899F22A8DBCB007B448C /* CGContext+Ext.swift */; };
 		53EC93C422A38DE9002A339E /* NCControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53EC93C322A38DE9002A339E /* NCControlBar.swift */; };
 		53EC93C622A38E18002A339E /* NCGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53EC93C522A38E18002A339E /* NCGridView.swift */; };
 		53EC93C822A38E75002A339E /* NCCanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53EC93C722A38E75002A339E /* NCCanvasView.swift */; };
@@ -30,6 +32,8 @@
 		5343AABF22A64175001AE240 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		536C5E0922A785A500BA14BE /* NSBezierPath+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSBezierPath+Ext.swift"; sourceTree = "<group>"; };
 		536C5E0B22A7947900BA14BE /* State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = State.swift; sourceTree = "<group>"; };
+		5392899D22A8DBBC007B448C /* NSEvent+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSEvent+Ext.swift"; sourceTree = "<group>"; };
+		5392899F22A8DBCB007B448C /* CGContext+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGContext+Ext.swift"; sourceTree = "<group>"; };
 		53EC93C322A38DE9002A339E /* NCControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NCControlBar.swift; sourceTree = "<group>"; };
 		53EC93C522A38E18002A339E /* NCGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NCGridView.swift; sourceTree = "<group>"; };
 		53EC93C722A38E75002A339E /* NCCanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NCCanvasView.swift; sourceTree = "<group>"; };
@@ -90,7 +94,9 @@
 		536C5E0822A7859300BA14BE /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				5392899F22A8DBCB007B448C /* CGContext+Ext.swift */,
 				536C5E0922A785A500BA14BE /* NSBezierPath+Ext.swift */,
+				5392899D22A8DBBC007B448C /* NSEvent+Ext.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -201,9 +207,11 @@
 				53EC93C422A38DE9002A339E /* NCControlBar.swift in Sources */,
 				5343AAC022A64175001AE240 /* Model.swift in Sources */,
 				533AE17B22A1F163000791E1 /* AppDelegate.swift in Sources */,
+				5392899E22A8DBBC007B448C /* NSEvent+Ext.swift in Sources */,
 				53EC93C822A38E75002A339E /* NCCanvasView.swift in Sources */,
 				536C5E0A22A785A500BA14BE /* NSBezierPath+Ext.swift in Sources */,
 				536C5E0C22A7947900BA14BE /* State.swift in Sources */,
+				539289A022A8DBCB007B448C /* CGContext+Ext.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

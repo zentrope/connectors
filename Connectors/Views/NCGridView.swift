@@ -30,11 +30,12 @@ class NCGridView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        resizeToFit()
-        drawGrid()
-        drawConnections()
-        drawBoxes()
-        drawConnector()
+        if let ctx = NSGraphicsContext.current?.cgContext {
+            resizeToFit()
+            drawGrid(ctx)
+            drawNodes(ctx)
+            drawConnector(ctx)
+        }
     }
 
     // MARK: - Public
@@ -44,83 +45,58 @@ class NCGridView: NSView {
         needsDisplay = true
     }
 
-    // MARK: - Implementation details
+    // MARK: - Drawing
 
-    private func drawGrid() {
+    private func drawGrid(_ ctx: CGContext) {
         let gridSize = state.defaultGridSize
 
-        guard let context = NSGraphicsContext.current?.cgContext else { return }
+        ctx.accentStroke()
+        ctx.setLineWidth(0.2)
 
-        context.setStrokeColor(NSColor.controlAccentColor.cgColor)
-        context.setLineWidth(0.2)
-
-        context.beginPath()
-        context.addRect(bounds)
+        ctx.beginPath()
+        ctx.addRect(bounds)
 
         for row in Int(bounds.minY)...Int(bounds.maxY) {
             if row % gridSize == 0 {
-                context.addLines(between: [CGPoint(x: bounds.minX, y: CGFloat(row)), CGPoint(x: bounds.maxX, y: CGFloat(row))])
+                ctx.addLines(between: [CGPoint(x: bounds.minX, y: CGFloat(row)), CGPoint(x: bounds.maxX, y: CGFloat(row))])
             }
         }
 
         for col in Int(bounds.minX)...Int(bounds.maxX) {
             if col % gridSize == 0 {
-                context.addLines(between: [CGPoint(x: CGFloat(col), y: bounds.minY), CGPoint(x: CGFloat(col), y: bounds.maxY)])
+                ctx.addLines(between: [CGPoint(x: CGFloat(col), y: bounds.minY), CGPoint(x: CGFloat(col), y: bounds.maxY)])
             }
         }
 
-        context.strokePath()
+        ctx.strokePath()
     }
 
-    private func drawBoxes() {
-        guard let context = NSGraphicsContext.current?.cgContext else { return }
-        context.setFillColor(NSColor.controlBackgroundColor.cgColor)
+    private func drawNodes(_ ctx: CGContext) {
+        ctx.backgroundFill()
 
-        state.boxes.reversed().forEach { box in
-            if let selected = state.selectedObject as? Box, selected === box {
-                context.setStrokeColor(NSColor.controlAccentColor.cgColor)
-            } else if let target = state.target as? Box, target === box {
-                context.setStrokeColor(NSColor.controlAccentColor.cgColor)
+        state.renders.forEach { render in
+            if render.isSelected {
+                ctx.accentStroke()
+            } else if render.kind == .connector {
+                ctx.grayStroke()
             } else {
-                context.setStrokeColor(NSColor.orange.cgColor)
+                ctx.orangeStroke()
             }
-            
-            let p = box.path
-            p.fill()
-            p.stroke()
+            render.path.fill()
+            render.path.stroke()
         }
     }
 
-    private func drawConnector() {
-        if !state.isConnecting {
-            return
-        }
-        NSGraphicsContext.current?.cgContext.setStrokeColor(NSColor.controlAccentColor.cgColor)
-        let p = NSBezierPath()
-        p.move(to: state.connectStartPoint)
-        p.line(to: state.connectEndPoint)
-        p.lineWidth = CGFloat(state.defaultConnectorWidth)
-        p.stroke()
-    }
-
-    private func drawConnections() {
-        let context = NSGraphicsContext.current?.cgContext
-        for connector in state.connectors {
-            if let selection = state.selectedObject as? Connector, selection == connector {
-                context?.setStrokeColor(NSColor.systemRed.cgColor)
-            } else {
-                context?.setStrokeColor(NSColor.systemGray.cgColor)
-            }
-            let path = connector.path
-            path.stroke()
-        }
+    private func drawConnector(_ ctx: CGContext) {
+        ctx.accentStroke()
+        state.activeConnectionPath?.stroke()
     }
 
     private func resizeToFit() {
         setFrameSize(NSMakeSize(state.width, state.height))
     }
 
-    // MARK: - NSResponder mouse actions
+    // MARK: - Mousing
 
     override func rightMouseDown(with event: NSEvent) {
         needsDisplay = state.startConnecting(forBoxAt: event.place(self))
@@ -144,11 +120,5 @@ class NCGridView: NSView {
 
     override func mouseDragged(with event: NSEvent) {
         needsDisplay = state.moveSelectedObject(to: event.place(self))
-    }
-}
-
-extension NSEvent {
-    func place(_ view: NSView) -> NSPoint {
-        return view.convert(locationInWindow, from: nil)
     }
 }
