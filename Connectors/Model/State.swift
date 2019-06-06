@@ -10,19 +10,26 @@ import Cocoa
 
 class State {
 
-    private(set) var boxes = [Box]()
-    private(set) var connectors = Set<Connector>()
-
+    // Potentially configurable properties
     let defaultGridSize = 20
     let defaultWidth = CGFloat(500)
     let defaultHeight = CGFloat(500)
     let defaultMargin = CGFloat(10)
     let defaultConnectorWidth = 3.0
 
-    var maxY: CGFloat { get { return boxes.map { $0.rect.maxY }.max() ?? defaultHeight }}
-    var maxX: CGFloat { get { return boxes.map { $0.rect.maxX }.max() ?? defaultWidth }}
-    var height: CGFloat { get { return maxY < (defaultHeight + defaultMargin) ? defaultHeight : maxY + defaultMargin }}
-    var width: CGFloat { get { return maxX < (defaultWidth + defaultMargin) ? defaultWidth : maxX + defaultMargin} }
+    // Computed properties
+    
+    var height: CGFloat {
+        get {
+            return maxY < (defaultHeight + defaultMargin) ? defaultHeight : maxY + defaultMargin
+        }
+    }
+
+    var width: CGFloat {
+        get {
+            return maxX < (defaultWidth + defaultMargin) ? defaultWidth : maxX + defaultMargin
+        }
+    }
 
     var activeConnectionPath: NSBezierPath? {
         get {
@@ -48,6 +55,12 @@ class State {
             return cs + bs.reversed()
         }
     }
+
+    private var boxes = [Box]()
+    private var connectors = Set<Connector>()
+
+    private var maxY: CGFloat { get { return boxes.map { $0.rect.maxY }.max() ?? defaultHeight }}
+    private var maxX: CGFloat { get { return boxes.map { $0.rect.maxX }.max() ?? defaultWidth }}
 
     private var selectedObject: Node?
 
