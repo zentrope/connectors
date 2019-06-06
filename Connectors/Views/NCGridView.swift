@@ -48,26 +48,19 @@ class NCGridView: NSView {
     // MARK: - Drawing
 
     private func drawGrid(_ ctx: CGContext) {
-        let gridSize = state.defaultGridSize
+        let size = state.defaultGridSize
 
-        ctx.accentStroke()
-        ctx.setLineWidth(0.2)
+        let rows = stride(from: Int(bounds.minY), through: Int(bounds.maxY), by: size)
+            .map { [NSMakePoint(bounds.minX, CGFloat($0)), NSMakePoint(bounds.maxX, CGFloat($0))] }
+
+        let cols = stride(from: Int(bounds.minX), through: Int(bounds.maxX), by: size)
+            .map { [NSMakePoint(CGFloat($0), bounds.minY), NSMakePoint(CGFloat($0), bounds.maxY)] }
 
         ctx.beginPath()
+        (rows + cols).forEach { ctx.addLines(between: $0)}
         ctx.addRect(bounds)
-
-        for row in Int(bounds.minY)...Int(bounds.maxY) {
-            if row % gridSize == 0 {
-                ctx.addLines(between: [CGPoint(x: bounds.minX, y: CGFloat(row)), CGPoint(x: bounds.maxX, y: CGFloat(row))])
-            }
-        }
-
-        for col in Int(bounds.minX)...Int(bounds.maxX) {
-            if col % gridSize == 0 {
-                ctx.addLines(between: [CGPoint(x: CGFloat(col), y: bounds.minY), CGPoint(x: CGFloat(col), y: bounds.maxY)])
-            }
-        }
-
+        ctx.accentStroke()
+        ctx.setLineWidth(0.2)
         ctx.strokePath()
     }
 
