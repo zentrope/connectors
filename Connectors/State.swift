@@ -30,10 +30,10 @@ class State {
     var offsetX: CGFloat = .zero
     var offsetY: CGFloat = .zero
 
-    var isConnecting = false
-    var target: Node?
-    var connectEndPoint = NSPoint(x: 0, y: 0)
-    var connectStartPoint = NSPoint(x: 0, y: 0)
+    private var isConnecting = false
+    private var target: Node?
+    private var connectEndPoint = NSPoint(x: 0, y: 0)
+    private var connectStartPoint = NSPoint(x: 0, y: 0)
 
     init() {
     }
@@ -86,7 +86,7 @@ class State {
         }
     }
 
-    func select(at point: NSPoint) -> Bool {
+    func select(objectAt point: NSPoint) -> Bool {
         for box in boxes {
             if box.contains(point) {
                 selectedObject = box
@@ -106,11 +106,51 @@ class State {
         return false
     }
 
-    func moveSelection(to point: NSPoint) -> Bool {
+    func moveSelectedObject(to point: NSPoint) -> Bool {
         if !isDragging { return false }
         guard let box = selectedObject as? Box else { return false }
         let newOrigin = NSMakePoint(point.x - offsetX, point.y - offsetY)
         box.moveTo(newOrigin)
+        return true
+    }
+
+    func stopMoving() {
+        isDragging = false
+    }
+
+    func startConnecting(forBoxAt point: NSPoint) -> Bool {
+        for box in boxes {
+            if box.contains(point) {
+                selectedObject = box
+                isConnecting = true
+                let x = box.rect.maxX - (box.rect.width / 2)
+                let y = box.rect.maxY - (box.rect.height / 2)
+                connectStartPoint = NSMakePoint(x,y)
+                connectEndPoint = point
+                return true
+            }
+        }
+        return false
+    }
+
+    func stopConnecting(at point: NSPoint) -> Bool {
+        isConnecting = false
+        if let target = target as? Box,
+            let selectedBox = selectedObject as? Box,
+            target != selectedBox {
+            connect(fromBox: selectedBox, toBox: target)
+        }
+        target = nil
+        return true
+    }
+
+    func extendConnection(to point: NSPoint) -> Bool {
+        if !isConnecting {
+            return false
+        }
+
+        connectEndPoint = point
+        target = boxes.first { $0.contains(point) }
         return true
     }
 }

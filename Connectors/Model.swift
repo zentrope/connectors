@@ -31,7 +31,9 @@ class Box: Node, Hashable {
 
     var path: NSBezierPath {
         get {
-            return NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4)
+            let p = NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4)
+            p.lineWidth = 1
+            return p
         }
     }
 

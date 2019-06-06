@@ -18,7 +18,6 @@ class NCGridView: NSView {
         self.state = state
         super.init(frame: NSMakeRect(0, 0, state.defaultWidth, state.defaultHeight))
         wantsLayer = true
-        state.clear()
     }
 
     required init?(coder decoder: NSCoder) {
@@ -85,9 +84,8 @@ class NCGridView: NSView {
             } else {
                 context.setStrokeColor(NSColor.orange.cgColor)
             }
-
-            let p = NSBezierPath(roundedRect: box.rect, xRadius: 4, yRadius: 4)
-            p.lineWidth = 1
+            
+            let p = box.path
             p.fill()
             p.stroke()
         }
@@ -122,59 +120,32 @@ class NCGridView: NSView {
         setFrameSize(NSMakeSize(state.width, state.height))
     }
 
-    // MARK: - Connect node actions
+    // MARK: - NSResponder mouse actions
 
     override func rightMouseDown(with event: NSEvent) {
-        let place = convert(event.locationInWindow, from: nil)
-        for box in state.boxes {
-            if box.contains(place) {
-                state.selectedObject = box
-                state.isConnecting = true
-                let x = box.rect.maxX - (box.rect.width / 2)
-                let y = box.rect.maxY - (box.rect.height / 2)
-                state.connectStartPoint = NSMakePoint(x,y)
-                state.connectEndPoint = place
-                needsDisplay = true
-                break
-            }
-        }
+        needsDisplay = state.startConnecting(forBoxAt: event.place(self))
     }
 
     override func rightMouseDragged(with event: NSEvent) {
-        if state.isConnecting {
-            let place = convert(event.locationInWindow, from: nil)
-            state.connectEndPoint = place
-            state.target = state.boxes.first { $0.contains(place) }
-            needsDisplay = true
-        }
+        needsDisplay = state.extendConnection(to: event.place(self))
     }
 
     override func rightMouseUp(with event: NSEvent) {
-        state.isConnecting = false
-        if let target = state.target as? Box,
-            let selectedBox = state.selectedObject as? Box,
-            target != selectedBox {
-            state.connect(fromBox: selectedBox, toBox: target)
-        }
-        state.target = nil
-        needsDisplay = true
+        needsDisplay = state.stopConnecting(at: event.place(self))
     }
 
-    // MARK: - Move/Select node actions
-
     override func mouseDown(with event: NSEvent) {
-        needsDisplay = state.select(at: event.place(self))
+        needsDisplay = state.select(objectAt: event.place(self))
     }
 
     override func mouseUp(with event: NSEvent) {
-        state.isDragging = false
+        state.stopMoving()
     }
 
     override func mouseDragged(with event: NSEvent) {
-        needsDisplay = state.moveSelection(to: event.place(self))
+        needsDisplay = state.moveSelectedObject(to: event.place(self))
     }
 }
-
 
 extension NSEvent {
     func place(_ view: NSView) -> NSPoint {
