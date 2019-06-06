@@ -70,10 +70,9 @@
 			isa = PBXGroup;
 			children = (
 				533AE17A22A1F163000791E1 /* AppDelegate.swift */,
-				5343AABF22A64175001AE240 /* Model.swift */,
-				536C5E0B22A7947900BA14BE /* State.swift */,
 				533AE17C22A1F163000791E1 /* ViewController.swift */,
 				536C5E0822A7859300BA14BE /* Extensions */,
+				539289A122A8E4A0007B448C /* Model */,
 				533AE18A22A1F17E000791E1 /* Support */,
 				53EC93CA22A3B97F002A339E /* Views */,
 			);
@@ -99,6 +98,15 @@
 				5392899D22A8DBBC007B448C /* NSEvent+Ext.swift */,
 			);
 			path = Extensions;
+			sourceTree = "<group>";
+		};
+		539289A122A8E4A0007B448C /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				5343AABF22A64175001AE240 /* Model.swift */,
+				536C5E0B22A7947900BA14BE /* State.swift */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 		53EC93CA22A3B97F002A339E /* Views */ = {
