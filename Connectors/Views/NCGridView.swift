@@ -8,18 +8,7 @@
 
 import Cocoa
 
-
-
-
 class NCGridView: NSView {
-
-    enum Action {
-        case reset
-        case add
-        case remove
-        case down
-        case up
-    }
 
     private var state: State
 

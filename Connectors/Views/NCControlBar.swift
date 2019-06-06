@@ -10,13 +10,21 @@ import Cocoa
 
 class NCControlBar: NSView {
 
+    enum Action {
+        case reset
+        case add
+        case remove
+        case down
+        case up
+    }
+
     private var resetButton = NSButton()
     private var addButton = NSButton()
     private var delButton = NSButton()
     private var moveUp = NSButton()
     private var moveDown = NSButton()
 
-    var action: ((NCGridView.Action) -> Void)?
+    var action: ((NCControlBar.Action) -> Void)?
 
     init() {
         super.init(frame: .zero)

@@ -53,7 +53,7 @@ class ViewController: NSViewController {
         controlBar.action = controlBarAction
     }
 
-    private func controlBarAction(_ action: NCGridView.Action) {
+    private func controlBarAction(_ action: NCControlBar.Action) {
         switch action {
 
         case .reset:
